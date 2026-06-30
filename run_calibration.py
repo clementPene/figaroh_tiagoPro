@@ -22,6 +22,7 @@ import yaml
 
 from figaroh.calibration.calibration_tools import (
     get_param_from_yaml,
+    add_base_name,
     add_pee_name,
     load_data,
     calculate_base_kinematics_regressor,
@@ -68,11 +69,9 @@ class TiagoProCalibration:
             config = yaml.safe_load(f)
 
         self.param = get_param_from_yaml(robot, config["calibration"])
-        self.param["known_baseframe"] = False  # co-estimate mocap->base_footprint transform
+        self.param["known_baseframe"] = False  # co-estimate mocap->universe transform
         self.param["known_tipframe"]  = False  # estimate marker pos rel. to gripper
         self.param["data_file"]       = data_path
-
-        add_pee_name(self.param)
 
         self._data_path      = data_path
         self.STATUS          = "NOT CALIBRATED"
@@ -80,6 +79,8 @@ class TiagoProCalibration:
 
     def load_and_check_data(self) -> None:
         calculate_base_kinematics_regressor([], self.model, self.data, self.param)
+        add_base_name(self.param)   # inserts base_px/py/pz/phix/phiy/phiz at positions 0-5
+        add_pee_name(self.param)    # appends pEEx_1/pEEy_1/pEEz_1 at the end
         self._pad_csv_missing_joints()
         self.PEE_measured, self.q_measured = load_data(
             self._data_path, self.model, self.param, del_list=[]
@@ -104,6 +105,14 @@ class TiagoProCalibration:
     def solve(self, outlier_eps: float = 0.05, max_iter: int = 10) -> None:
         var0, _ = initialize_variables(self.param, mode=0)
         ci = self.param["calibration_index"]
+
+        # Seed base frame DOF with the measured mocap→base transform
+        base_pose = self.param.get("base_pose", None)
+        if base_pose is not None:
+            base_arr = np.atleast_1d(np.array(base_pose, dtype=float))
+            var0[:len(base_arr)] = base_arr[:6]
+
+        # Seed EE marker position with tip_pose initial guess
         tip = self.param.get("tip_pose", None)
         if tip is not None:
             tip_arr = np.atleast_1d(np.array(tip, dtype=float))

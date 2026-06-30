@@ -23,6 +23,8 @@ import yaml
 
 from figaroh.calibration.calibration_tools import (
     get_param_from_yaml,
+    add_base_name,
+    add_pee_name,
     calculate_base_kinematics_regressor,
 )
 
@@ -273,6 +275,8 @@ def main():
     _, R_b, _, _, _ = calculate_base_kinematics_regressor(
         pool_q, model, data, param
     )
+    add_base_name(param)
+    add_pee_name(param)
     R_rearr = _rearrange_rb(R_b, param)
     sub_mats = _sub_info_matrices(R_rearr, param)
 
