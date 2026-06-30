@@ -163,9 +163,11 @@ class TiagoProCalibration:
         coeff = self.param.get("coeff_regularize") or 0.01
         PEEe  = calc_updated_fkm(self.model, self.data, var, self.q_measured, self.param)
         ci    = self.param["calibration_index"]
+        n_base = 6  # base frame DOF (free when known_baseframe=False)
+        n_tip  = self.param["NbMarkers"] * ci
         return np.append(
             self.PEE_measured - PEEe,
-            np.sqrt(coeff) * var[:-self.param["NbMarkers"] * ci],
+            np.sqrt(coeff) * var[n_base:-n_tip],
         )
 
 
@@ -181,9 +183,9 @@ def write_calibration_xacro(calib: TiagoProCalibration, output_path: str) -> Non
             "arm_right_4_joint", "arm_right_5_joint", "arm_right_6_joint",
             "arm_right_7_joint",
         ]:
-            if jname in param_name:
+            if f"offsetRZ_{jname}" == param_name:
                 offsets[f"{jname}_offset"] = value
-        if "torso_lift_joint" in param_name:
+        if param_name == "offsetPZ_torso_lift_joint":
             offsets["torso_lift_joint_offset"] = value
 
     xacro_template = """\
