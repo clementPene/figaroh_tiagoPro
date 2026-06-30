@@ -1,20 +1,19 @@
 # Figaroh calibration config for Tiago Pro — right arm geometric calibration.
 #
-# Goal: identify per-joint angle offsets for the chain
+# Goal: identify full kinematic parameters for the chain
 #   base_footprint -> gripper_right_tool_holder
 # using external EE pose measurements (Qualisys mocap or any other source).
 #
-# Identified parameters (joint_offset level):
-#   offsetRZ_torso_lift_joint       (prismatic -> offsetPZ actually, handled by Figaroh)
-#   offsetRZ_arm_right_1_joint .. arm_right_7_joint
-# Plus (known_tipframe=False):
+# Identified parameters (full_params level, known_baseframe=False):
+#   6 DOF base frame pose  (mocap frame -> base_footprint, estimated)
+#   DH params per joint (a, d, alpha, theta offset) for torso + arm_right_1..7
 #   pEEx_1, pEEy_1, pEEz_1  — marker position relative to gripper_right_tool_holder
 #
 # NOTE: joint names in this file must match the Pinocchio model names exactly.
 # Run collect_calibration_data.py with --print-joint-names to verify.
 ---
 calibration:
-  calib_level: joint_offset       # start here; switch to full_params if residual > 5mm
+  calib_level: full_params
   non_geom: False
   base_frame: base_footprint
   tool_frame: gripper_right_tool_holder
@@ -22,7 +21,7 @@ calibration:
     - ref_joint: arm_right_7_joint
       measure: [True, True, True, False, False, False]   # position only (no orientation)
   free_flyer: False
-  # camera_pose: not used (known_baseframe=True — mocap data already in base_footprint frame)
+  # camera_pose: initial guess for mocap->base_footprint transform (estimated by solver)
   camera_pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
   # tip_pose: initial guess for marker position rel. to gripper_right_tool_holder (meters, RPY)
   tip_pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]

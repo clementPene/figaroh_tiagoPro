@@ -114,7 +114,10 @@ def _run_detmax(sub_mats, n_choose):
     def crit(indices):
         M = sum(sub_mats[i] for i in indices)
         try:
-            return float(np.linalg.det(M)) ** (1 / M.shape[0])
+            d = float(np.linalg.det(M))
+            if d <= 0:
+                return 0.0
+            return d ** (1 / M.shape[0])
         except Exception:
             return 0.0
 
@@ -242,7 +245,7 @@ def main():
     with open(args.config) as f:
         config = yaml.safe_load(f)
     param = get_param_from_yaml(_Robot(model), config["calibration"])
-    param["known_baseframe"] = True
+    param["known_baseframe"] = False
     param["known_tipframe"] = False
 
     lbs, ubs = _get_joint_limits(model, ACTIVE_JOINTS)

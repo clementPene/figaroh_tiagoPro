@@ -68,7 +68,7 @@ class TiagoProCalibration:
             config = yaml.safe_load(f)
 
         self.param = get_param_from_yaml(robot, config["calibration"])
-        self.param["known_baseframe"] = True   # EE pose already in base_link frame
+        self.param["known_baseframe"] = False  # co-estimate mocap->base_footprint transform
         self.param["known_tipframe"]  = False  # estimate marker pos rel. to gripper
         self.param["data_file"]       = data_path
 
